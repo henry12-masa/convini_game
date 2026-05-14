@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>放置コンビニ経営ゲーム</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --card: #ffffff;
+      --main: #2563eb;
+      --main2: #16a34a;
+      --text: #111827;
+      --muted: #6b7280;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --border: #e5e7eb;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #dbeafe 0, var(--bg) 45%);
+      color: var(--text);
+    }
+
+    header {
+      padding: 22px 16px 14px;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: clamp(25px, 4vw, 42px);
+      letter-spacing: 0.03em;
+    }
+
+    header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .app {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: 1fr 320px;
+      gap: 16px;
+    }
+
+    .main {
+      display: grid;
+      gap: 16px;
+    }
+
+    .side {
+      display: grid;
+      gap: 16px;
+      align-content: start;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 16px;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .stat {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      min-height: 86px;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .value {
+      font-weight: 800;
+      font-size: clamp(19px, 3vw, 28px);
+      word-break: break-all;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .store-wrap {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .store {
+      min-height: 340px;
+      border-radius: 22px;
+      background: linear-gradient(180deg, #eff6ff, #ffffff);
+      border: 1px solid #bfdbfe;
+      padding: 14px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .sky-sign {
+      width: 88%;
+      margin: 0 auto 10px;
+      background: linear-gradient(90deg, #2563eb, #22c55e, #f97316);
+      color: white;
+      text-align: center;
+      border-radius: 14px;
+      padding: 10px;
+      font-weight: 900;
+      letter-spacing: 0.14em;
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+    }
+
+    .building {
+      margin: 0 auto;
+      width: min(390px, 100%);
+      min-height: 230px;
+      background: #ffffff;
+      border: 4px solid #1f2937;
+      border-radius: 16px 16px 8px 8px;
+      position: relative;
+      box-shadow: inset 0 -20px #f3f4f6;
+    }
+
+    .windows {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 18px;
+    }
+
+    .window {
+      height: 76px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #dbeafe, #fef3c7);
+      border: 3px solid #1f2937;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .window::after {
+      content: "";
+      position: absolute;
+      width: 120%;
+      height: 8px;
+      background: rgba(255,255,255,0.6);
+      transform: rotate(-28deg);
+      left: -20px;
+      top: 25px;
+    }
+
+    .door {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 104px;
+      background: linear-gradient(180deg, #dbeafe, #93c5fd);
+      border: 3px solid #1f2937;
+      border-bottom: 0;
+      border-radius: 10px 10px 0 0;
+    }
+
+    .door::after {
+      content: "●";
+      position: absolute;
+      right: 8px;
+      top: 48px;
+      color: #1f2937;
+      font-size: 12px;
+    }
+
+    .road {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 34px;
+      background: #374151;
+    }
+
+    .road::after {
+      content: "";
+      position: absolute;
+      top: 14px;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background: repeating-linear-gradient(90deg, #fff 0 30px, transparent 30px 60px);
+      opacity: 0.9;
+    }
+
+    .customer {
+      position: absolute;
+      bottom: 26px;
+      left: -40px;
+      font-size: 28px;
+      animation: walk 7s linear infinite;
+      filter: drop-shadow(0 3px 2px rgba(0,0,0,0.18));
+    }
+
+    .customer:nth-child(2) { animation-delay: 1.5s; }
+    .customer:nth-child(3) { animation-delay: 3.2s; }
+    .customer:nth-child(4) { animation-delay: 5s; }
+
+    @keyframes walk {
+      0% { transform: translateX(0); opacity: 0; }
+      10% { opacity: 1; }
+      70% { opacity: 1; }
+      100% { transform: translateX(460px); opacity: 0; }
+    }
+
+    .action-panel {
+      display: grid;
+      gap: 10px;
+    }
+
+    .big-btn {
+      width: 100%;
+      border: 0;
+      border-radius: 18px;
+      background: linear-gradient(135deg, var(--main), #60a5fa);
+      color: white;
+      font-size: 18px;
+      font-weight: 900;
+      padding: 17px 14px;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.22);
+      transition: transform 0.08s ease, opacity 0.2s ease;
+    }
+
+    .big-btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 14px;
+      background: #111827;
+      color: white;
+      font-weight: 800;
+      padding: 11px 12px;
+      cursor: pointer;
+      transition: transform 0.08s ease, opacity 0.2s ease;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    .btn:disabled,
+    .big-btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn.green { background: var(--main2); }
+    .btn.blue { background: var(--main); }
+    .btn.orange { background: var(--warning); }
+    .btn.red { background: var(--danger); }
+    .btn.light {
+      background: #eef2ff;
+      color: #1e3a8a;
+      border: 1px solid #c7d2fe;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .tab {
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      color: var(--text);
+      border-radius: 999px;
+      padding: 9px 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .tab.active {
+      background: var(--main);
+      color: white;
+      border-color: var(--main);
+    }
+
+    .shop-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 12px;
+      background: #ffffff;
+    }
+
+    .item h3 {
+      margin: 0 0 4px;
+      font-size: 16px;
+    }
+
+    .item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .progress {
+      height: 12px;
+      background: #e5e7eb;
+      border-radius: 999px;
+      overflow: hidden;
+      margin-top: 9px;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #22c55e, #3b82f6);
+      transition: width 0.2s ease;
+    }
+
+    .log {
+      max-height: 210px;
+      overflow-y: auto;
+      display: grid;
+      gap: 8px;
+      padding-right: 4px;
+    }
+
+    .log-entry {
+      font-size: 12px;
+      color: #374151;
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px;
+    }
+
+    .ad-box {
+      min-height: 250px;
+      border: 2px dashed #cbd5e1;
+      border-radius: 16px;
+      background: #f8fafc;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+      padding: 12px;
+      font-size: 13px;
+    }
+
+    .ad-box code {
+      display: block;
+      margin-top: 8px;
+      font-size: 11px;
+      color: #475569;
+    }
+
+    .footer-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .notice {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      color: #92400e;
+      border-radius: 14px;
+      padding: 10px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .rank {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px;
+      border-radius: 14px;
+      background: #f8fafc;
+      border: 1px solid var(--border);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%) translateY(30px);
+      background: #111827;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 999px;
+      opacity: 0;
+      pointer-events: none;
+      transition: 0.25s ease;
+      z-index: 100;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @media (max-width: 920px) {
+      .app {
+        grid-template-columns: 1fr;
+      }
+      .store-wrap {
+        grid-template-columns: 1fr;
+      }
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 520px) {
+      .stats {
+        grid-template-columns: 1fr;
+      }
+      .item {
+        grid-template-columns: 1fr;
+      }
+      .footer-actions {
+        grid-template-columns: 1fr;
+      }
+      .card {
+        padding: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🏪 放置コンビニ経営ゲーム</h1>
+    <p>商品を強化して、スタッフを雇って、全国チェーンを目指そう！</p>
+  </header>
+
+  <div class="app">
+    <main class="main">
+      <section class="card stats">
+        <div class="stat">
+          <div class="label">所持金</div>
+          <div class="value" id="money">¥0</div>
+          <div class="small">買い物・強化に使います</div>
+        </div>
+        <div class="stat">
+          <div class="label">自動売上</div>
+          <div class="value" id="incomePerSec">¥0/秒</div>
+          <div class="small">放置で増えます</div>
+        </div>
+        <div class="stat">
+          <div class="label">評判</div>
+          <div class="value" id="reputation">0</div>
+          <div class="small">高いほど来客UP</div>
+        </div>
+        <div class="stat">
+          <div class="label">店舗ランク</div>
+          <div class="value" id="storeRank">個人店</div>
+          <div class="small" id="rankBonus">倍率 x1.00</div>
+        </div>
+      </section>
+
+      <section class="card store-wrap">
+        <div class="store">
+          <div class="sky-sign">KITAZAWA MART</div>
+          <div class="building">
+            <div class="windows">
+              <div class="window"></div>
+              <div class="window"></div>
+              <div class="window"></div>
+            </div>
+            <div class="door"></div>
+          </div>
+          <div class="customer">🚶</div>
+          <div class="customer">🧍</div>
+          <div class="customer">🏃</div>
+          <div class="customer">🧑‍💼</div>
+          <div class="road"></div>
+        </div>
+
+        <div class="action-panel">
+          <button class="big-btn" id="serveBtn">🛒 接客する +¥10</button>
+          <div class="notice">
+            <b>遊び方：</b><br>
+            まずは「接客する」でお金を稼ぐ → 商品棚を強化 → スタッフを雇う → 店舗拡大で倍率UP。
+          </div>
+          <div class="rank">
+            <div>
+              <b>次の店舗拡大</b>
+              <div class="small" id="nextExpansionText">¥5,000でミニコンビニへ</div>
+            </div>
+            <button class="btn orange" id="expandBtn">拡大</button>
+          </div>
+          <div class="progress">
+            <div class="bar" id="rankProgress"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="tabs">
+          <button class="tab active" data-tab="products">商品強化</button>
+          <button class="tab" data-tab="staff">スタッフ</button>
+          <button class="tab" data-tab="facilities">設備</button>
+        </div>
+        <div class="shop-list" id="shopList"></div>
+      </section>
+    </main>
+
+    <aside class="side">
+      <section class="card">
+        <h2 style="margin:0 0 10px; font-size:18px;">📢 広告枠</h2>
+        <div class="ad-box">
+          <div style="width:100%;">
+            <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-8398161859137802"
+              crossorigin="anonymous"></script>
+            <!-- チェス -->
+            <ins class="adsbygoogle"
+              style="display:block"
+              data-ad-client="ca-pub-8398161859137802"
+              data-ad-slot="5599163841"
+              data-ad-format="auto"
+              data-full-width-responsive="true"></ins>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 style="margin:0 0 10px; font-size:18px;">📜 経営ログ</h2>
+        <div class="log" id="log"></div>
+      </section>
+
+      <section class="card">
+        <h2 style="margin:0 0 10px; font-size:18px;">💾 セーブ</h2>
+        <p class="small">自動保存あり。ブラウザを閉じても続きから遊べます。</p>
+        <div class="footer-actions">
+          <button class="btn blue" id="saveBtn">保存</button>
+          <button class="btn red" id="resetBtn">リセット</button>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <div class="toast" id="toast">保存しました</div>
+
+  <script>
+    const SAVE_KEY = "convenience_idle_game_v1";
+
+    const ranks = [
+      { name: "個人店", cost: 0, multiplier: 1 },
+      { name: "ミニコンビニ", cost: 5000, multiplier: 1.25 },
+      { name: "駅前店", cost: 35000, multiplier: 1.65 },
+      { name: "大型店舗", cost: 180000, multiplier: 2.2 },
+      { name: "地域チェーン", cost: 900000, multiplier: 3.1 },
+      { name: "全国チェーン", cost: 5000000, multiplier: 5 },
+      { name: "世界展開", cost: 25000000, multiplier: 8 },
+      { name: "宇宙コンビニ", cost: 120000000, multiplier: 13 }
+    ];
+
+    const upgrades = {
+      products: [
+        {
+          id: "onigiri",
+          icon: "🍙",
+          name: "おにぎり棚",
+          desc: "定番商品。売上の土台になります。",
+          baseCost: 50,
+          baseIncome: 1,
+          rep: 1
+        },
+        {
+          id: "bento",
+          icon: "🍱",
+          name: "弁当コーナー",
+          desc: "昼と夜に強い主力商品。",
+          baseCost: 280,
+          baseIncome: 6,
+          rep: 2
+        },
+        {
+          id: "coffee",
+          icon: "☕",
+          name: "コーヒーマシン",
+          desc: "利益率が高く、リピーターが増えます。",
+          baseCost: 1200,
+          baseIncome: 22,
+          rep: 5
+        },
+        {
+          id: "sweets",
+          icon: "🍰",
+          name: "スイーツ棚",
+          desc: "女性客と学生に人気。評判も上がります。",
+          baseCost: 4200,
+          baseIncome: 70,
+          rep: 9
+        },
+        {
+          id: "fried",
+          icon: "🍗",
+          name: "ホットスナック",
+          desc: "レジ横の強力な収益源。",
+          baseCost: 15000,
+          baseIncome: 210,
+          rep: 16
+        }
+      ],
+      staff: [
+        {
+          id: "parttimer",
+          icon: "🧑‍🍳",
+          name: "アルバイト",
+          desc: "接客を自動化して売上を安定させます。",
+          baseCost: 650,
+          baseIncome: 10,
+          rep: 3
+        },
+        {
+          id: "manager",
+          icon: "👔",
+          name: "店長",
+          desc: "店舗全体の効率を高めます。",
+          baseCost: 8000,
+          baseIncome: 95,
+          rep: 12
+        },
+        {
+          id: "marketer",
+          icon: "📣",
+          name: "販促スタッフ",
+          desc: "キャンペーンで来客数を増やします。",
+          baseCost: 55000,
+          baseIncome: 480,
+          rep: 40
+        },
+        {
+          id: "area",
+          icon: "🧑‍💼",
+          name: "エリアマネージャー",
+          desc: "複数店舗展開に必要な人材。",
+          baseCost: 300000,
+          baseIncome: 1900,
+          rep: 120
+        }
+      ],
+      facilities: [
+        {
+          id: "register",
+          icon: "💳",
+          name: "セルフレジ",
+          desc: "会計スピードUP。客の取りこぼしを減らします。",
+          baseCost: 2500,
+          baseIncome: 35,
+          rep: 8
+        },
+        {
+          id: "fridge",
+          icon: "🧊",
+          name: "大型冷蔵ケース",
+          desc: "飲料・弁当・スイーツの販売力UP。",
+          baseCost: 22000,
+          baseIncome: 260,
+          rep: 28
+        },
+        {
+          id: "delivery",
+          icon: "🛵",
+          name: "宅配サービス",
+          desc: "店外にも売上が広がります。",
+          baseCost: 120000,
+          baseIncome: 1150,
+          rep: 95
+        },
+        {
+          id: "ai",
+          icon: "🤖",
+          name: "AI需要予測",
+          desc: "廃棄ロスを減らして利益率を大幅UP。",
+          baseCost: 850000,
+          baseIncome: 6200,
+          rep: 260
+        }
+      ]
+    };
+
+    let state = {
+      money: 0,
+      reputation: 0,
+      rankIndex: 0,
+      activeTab: "products",
+      levels: {},
+      lastSaved: Date.now()
+    };
+
+    const moneyEl = document.getElementById("money");
+    const incomePerSecEl = document.getElementById("incomePerSec");
+    const reputationEl = document.getElementById("reputation");
+    const storeRankEl = document.getElementById("storeRank");
+    const rankBonusEl = document.getElementById("rankBonus");
+    const serveBtn = document.getElementById("serveBtn");
+    const expandBtn = document.getElementById("expandBtn");
+    const shopList = document.getElementById("shopList");
+    const logEl = document.getElementById("log");
+    const saveBtn = document.getElementById("saveBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const toastEl = document.getElementById("toast");
+    const nextExpansionText = document.getElementById("nextExpansionText");
+    const rankProgress = document.getElementById("rankProgress");
+
+    function formatYen(num) {
+      if (!Number.isFinite(num)) return "¥0";
+      if (num >= 100000000) return "¥" + (num / 100000000).toFixed(2) + "億";
+      if (num >= 10000) return "¥" + (num / 10000).toFixed(2) + "万";
+      return "¥" + Math.floor(num).toLocaleString("ja-JP");
+    }
+
+    function getLevel(id) {
+      return state.levels[id] || 0;
+    }
+
+    function getCost(item) {
+      const level = getLevel(item.id);
+      return Math.floor(item.baseCost * Math.pow(1.18, level));
+    }
+
+    function getRankMultiplier() {
+      return ranks[state.rankIndex].multiplier;
+    }
+
+    function getReputationMultiplier() {
+      return 1 + state.reputation / 1000;
+    }
+
+    function getIncomePerSec() {
+      let base = 0;
+      Object.values(upgrades).flat().forEach(item => {
+        base += getLevel(item.id) * item.baseIncome;
+      });
+      return base * getRankMultiplier() * getReputationMultiplier();
+    }
+
+    function getClickValue() {
+      return Math.floor(10 * getRankMultiplier() * getReputationMultiplier());
+    }
+
+    function addLog(text) {
+      const div = document.createElement("div");
+      div.className = "log-entry";
+      const time = new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
+      div.textContent = `[${time}] ${text}`;
+      logEl.prepend(div);
+      while (logEl.children.length > 30) {
+        logEl.removeChild(logEl.lastChild);
+      }
+    }
+
+    function showToast(text) {
+      toastEl.textContent = text;
+      toastEl.classList.add("show");
+      setTimeout(() => toastEl.classList.remove("show"), 1400);
+    }
+
+    function renderShop() {
+      shopList.innerHTML = "";
+      upgrades[state.activeTab].forEach(item => {
+        const level = getLevel(item.id);
+        const cost = getCost(item);
+        const canBuy = state.money >= cost;
+
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `
+          <div>
+            <h3>${item.icon} ${item.name} Lv.${level}</h3>
+            <p>${item.desc}</p>
+            <p>効果：+${formatYen(item.baseIncome)}/秒 / 評判 +${item.rep}</p>
+          </div>
+          <button class="btn green" ${canBuy ? "" : "disabled"}>${formatYen(cost)}で購入</button>
+        `;
+
+        div.querySelector("button").addEventListener("click", () => buyUpgrade(item));
+        shopList.appendChild(div);
+      });
+    }
+
+    function render() {
+      const income = getIncomePerSec();
+      const click = getClickValue();
+      const currentRank = ranks[state.rankIndex];
+      const nextRank = ranks[state.rankIndex + 1];
+
+      moneyEl.textContent = formatYen(state.money);
+      incomePerSecEl.textContent = formatYen(income) + "/秒";
+      reputationEl.textContent = Math.floor(state.reputation).toLocaleString("ja-JP");
+      storeRankEl.textContent = currentRank.name;
+      rankBonusEl.textContent = `倍率 x${currentRank.multiplier.toFixed(2)}`;
+      serveBtn.textContent = `🛒 接客する +${formatYen(click)}`;
+
+      if (nextRank) {
+        nextExpansionText.textContent = `${formatYen(nextRank.cost)}で${nextRank.name}へ`;
+        expandBtn.disabled = state.money < nextRank.cost;
+        const prevCost = currentRank.cost;
+        const range = nextRank.cost - prevCost;
+        const current = Math.max(0, state.money - prevCost);
+        const percent = Math.max(0, Math.min(100, (current / range) * 100));
+        rankProgress.style.width = percent + "%";
+      } else {
+        nextExpansionText.textContent = "最大ランクに到達しました";
+        expandBtn.disabled = true;
+        rankProgress.style.width = "100%";
+      }
+
+      renderShop();
+    }
+
+    function buyUpgrade(item) {
+      const cost = getCost(item);
+      if (state.money < cost) return;
+
+      state.money -= cost;
+      state.levels[item.id] = getLevel(item.id) + 1;
+      state.reputation += item.rep;
+      addLog(`${item.name}をLv.${getLevel(item.id)}に強化しました。`);
+      render();
+    }
+
+    function expandStore() {
+      const nextRank = ranks[state.rankIndex + 1];
+      if (!nextRank || state.money < nextRank.cost) return;
+
+      state.money -= nextRank.cost;
+      state.rankIndex += 1;
+      state.reputation += 50 * state.rankIndex;
+      addLog(`店舗を「${nextRank.name}」に拡大しました！売上倍率UP！`);
+      render();
+    }
+
+    function saveGame() {
+      state.lastSaved = Date.now();
+      localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+      showToast("保存しました");
+    }
+
+    function loadGame() {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) {
+        addLog("新しくコンビニを開店しました。まずは接客で稼ぎましょう！");
+        return;
+      }
+
+      try {
+        const saved = JSON.parse(raw);
+        state = { ...state, ...saved };
+
+        const now = Date.now();
+        const secondsAway = Math.min(60 * 60 * 8, Math.floor((now - (state.lastSaved || now)) / 1000));
+        if (secondsAway > 5) {
+          const offlineIncome = getIncomePerSec() * secondsAway * 0.6;
+          state.money += offlineIncome;
+          addLog(`留守中の売上として${formatYen(offlineIncome)}を獲得しました。`);
+        } else {
+          addLog("セーブデータを読み込みました。経営再開です！");
+        }
+      } catch (error) {
+        console.error(error);
+        addLog("セーブデータの読み込みに失敗しました。新規データで開始します。");
+      }
+    }
+
+    function resetGame() {
+      const ok = confirm("本当にリセットしますか？すべての進行が消えます。");
+      if (!ok) return;
+      localStorage.removeItem(SAVE_KEY);
+      state = {
+        money: 0,
+        reputation: 0,
+        rankIndex: 0,
+        activeTab: "products",
+        levels: {},
+        lastSaved: Date.now()
+      };
+      logEl.innerHTML = "";
+      addLog("ゲームをリセットしました。再スタートです！");
+      render();
+      showToast("リセットしました");
+    }
+
+    serveBtn.addEventListener("click", () => {
+      const clickValue = getClickValue();
+      state.money += clickValue;
+      if (Math.random() < 0.08) {
+        state.reputation += 1;
+        addLog("丁寧な接客で評判が1上がりました。");
+      }
+      render();
+    });
+
+    expandBtn.addEventListener("click", expandStore);
+    saveBtn.addEventListener("click", saveGame);
+    resetBtn.addEventListener("click", resetGame);
+
+    document.querySelectorAll(".tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+        state.activeTab = tab.dataset.tab;
+        renderShop();
+      });
+    });
+
+    setInterval(() => {
+      state.money += getIncomePerSec();
+      render();
+    }, 1000);
+
+    setInterval(() => {
+      saveGame();
+    }, 30000);
+
+    window.addEventListener("beforeunload", saveGame);
+
+    loadGame();
+    render();
+  </script>
+</body>
+</html>
